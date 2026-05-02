@@ -142,7 +142,7 @@ let load_database filename =
     with
     | _ ->
       (* Error handling for missing files or permission issues *)
-      Printf.printf "Error: Could not read file %s\n" filename;
+      Printf.printf "Erro: Não foi possível ler %s\n" filename;
       []
   in
   (* Iterates through the lines and populates the database records using functional folding *)
@@ -444,41 +444,58 @@ let list_students db =
     sorted
 ;;
 
+
+let print_usage () =
+  Printf.printf "Uso:\n";
+  Printf.printf "  <exe> <database.pl> listar_alunos\n";
+  Printf.printf "  <exe> <database.pl> indicadores <id>\n";
+  Printf.printf "  <exe> <database.pl> avaliar <id>\n";
+  Printf.printf "  <exe> <database.pl> listar_estados\n"
+;;
+
 (* 
    Main entry point of the program.
    Handles command-line arguments to trigger database operations.
 *)
 let () =
-  (* Define the source file containing the Prolog-style database *)
-  let filename = "database_26.pl" in
-  (* Load and parse the entire database into memory at startup *)
-  let db = load_database filename in
-  (* Convert command-line arguments to a list for pattern matching *)
   match Array.to_list Sys.argv with
-  | _ :: "listar_alunos" :: _ -> list_students db
-  | _ :: "indicadores" :: id_str :: _ ->
-    (try
-       let id = int_of_string id_str in
-       show_indicators id db
-     with
-     | Failure _ ->
-       Printf.printf "Error: Student ID '%s' must be a valid integer.\n%!" id_str
-     | _ -> Printf.printf "An unexpected error occurred.\n%!")
-  | _ :: "avaliar" :: id_str :: _ ->
-    (try
-       let id = int_of_string id_str in
-       evaluate_student id db
-     with
-     | Failure _ ->
-       Printf.printf "Error: Student ID '%s' must be a valid integer.\n%!" id_str
-     | _ -> Printf.printf "An unexpected error occurred during evaluation.\n%!")
-  | _ :: "listar_estados" :: _ -> list_by_status db
-  | _ :: comando :: _ -> Printf.printf "Error: Unknown command '%s'.\n" comando
-  (* Default case: Display usage instructions if arguments are missing or invalid *)
+  | _ :: db_file :: command :: args ->
+      (* Load database once *)
+      let db =
+        try load_database db_file
+        with _ ->
+          Printf.printf "Erro: não foi possível carregar o ficheiro %s\n%!" db_file;
+          exit 1
+      in
+
+      begin match command, args with
+
+      | "listar_alunos", [] ->
+          list_students db
+
+      | "listar_estados", [] ->
+          list_by_status db
+
+      | "indicadores", id_str :: _ ->
+          (try
+             let id = int_of_string id_str in
+             show_indicators id db
+           with Failure _ ->
+             Printf.printf "ID inválido: %s\n%!" id_str)
+
+      | "avaliar", id_str :: _ ->
+          (try
+             let id = int_of_string id_str in
+             evaluate_student id db
+           with Failure _ ->
+             Printf.printf "ID inválido: %s\n%!" id_str)
+
+      | cmd, _ ->
+          Printf.printf "Comando desconhecido: %s\n%!" cmd;
+          print_usage ()
+
+      end
+
   | _ ->
-    Printf.printf "Comandos Disponíveis:\n";
-    Printf.printf "listar_alunos\n";
-    Printf.printf "indicadores\n";
-    Printf.printf "avaliar\n";
-    Printf.printf "listar_estados\n"
+      print_usage ()
 ;;

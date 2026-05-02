@@ -40,6 +40,7 @@ public class Interface {
                 case "0":
                     System.out.println("A encerrar...");
                     running = false;
+                    System.exit(0);
                     break;
                 default:
                     System.out.println("\n[Erro] Opção inválida.");

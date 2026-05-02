@@ -9,13 +9,15 @@ public class Main {
 
         String executableName = "main.exe";
 
-        String baseFolderPath = rootPath + File.separator + "ocaml";
+        String binDirPath = rootPath + File.separator + "bin";
 
-        String completeExecutablePath = baseFolderPath + File.separator + "main.exe";
+        String ocamlFolderPath = rootPath + File.separator + "ocaml";
 
-        File compileDir = new File(baseFolderPath);
+        String completeExecutablePath = binDirPath + File.separator + "main.exe";
 
-        IntegratorOCaml integrator = new IntegratorOCaml(completeExecutablePath, compileDir.getPath());
+        File compileDir = new File(ocamlFolderPath);
+
+        IntegratorOCaml integrator = new IntegratorOCaml(completeExecutablePath, binDirPath);
 
         if (!integrator.verifyExecutable()) {
             System.err.println("Erro: Executável OCaml não encontrado em: " + completeExecutablePath);

@@ -21,70 +21,95 @@ public class IntegratorOCaml {
         return f.exists() && !f.isDirectory();
     }
     
-    // Execute the command in stdin
     public List<String> executeCommand(String command, String id) {
-        // Initialized the array for output data
-        List<String> output = new ArrayList<>();
+    List<String> output = new ArrayList<>();
 
-        try {
-            // Array of commands
-            List<String> fullCommand = new ArrayList<>();
+    try {
+        List<String> fullCommand = new ArrayList<>();
 
-            // Add the path for the OCaml project ex: "../../bin/main.exe"
-            fullCommand.add(_executable);
+        fullCommand.add(_executable);
 
-            // Command "listar_alunos" for example
-            fullCommand.add(command);
+        fullCommand.add("../ocaml/database_26.pl");
+        
+        fullCommand.add(command);
 
-            if (id != null && !id.isEmpty()) {
-                // If id is valid add to the command element
-                fullCommand.add(id);
-            }
-
-            // Initialize stream
-            ProcessBuilder pb = new ProcessBuilder(fullCommand);
-
-            // Define the folder to execute the command
-            pb.directory(new File(_workingDir));
-
-            pb.redirectErrorStream(true);
-
-            Process process = pb.start();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-            String linha;
-
-            while ((linha = reader.readLine()) != null) {
-                output.add(linha);
-            }
-
-            process.waitFor();
-        } catch (Exception e) {
-            output.add("Error while accessing the OCaml module: " + e.getMessage());
+        if (id != null && !id.isEmpty()) {
+            fullCommand.add(id);
         }
 
-        return output;
+        ProcessBuilder pb = new ProcessBuilder(fullCommand);
+        pb.directory(new File(_workingDir));
+
+        // Keep stderr separate (for debug control)
+        pb.redirectErrorStream(true);
+
+        Process process = pb.start();
+
+        // Read output safely
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream()))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.add(line);
+            }
+        }
+
+        int exitCode = process.waitFor();
+
+        // Handle failure explicitly
+        if (exitCode != 0) {
+            output.add("ERROR: OCaml process failed with code " + exitCode);
+        }
+
+    } catch (Exception e) {
+        output.add("Error while accessing OCaml module: " + e.getMessage());
     }
+
+    return output;
+}
 
     public boolean compileOCaml(File compilerFolder, String outputName) {
         try {
+            // Ensure bin exists
+            File binDir = new File(compilerFolder.getParentFile(), "bin");
+
+            if (!binDir.exists()) {
+                boolean created = binDir.mkdirs();
+
+                if (!created) {
+                    System.err.println("Falha ao criar diretório bin/");
+                    return false; // ou throw
+                }
+            }
+
+            File compilerFile = new File(compilerFolder.getAbsoluteFile(), "main.ml");
+
             ProcessBuilder pb = new ProcessBuilder(
                     "ocamlc",
                     "-o", outputName,
                     "str.cma",
-                    "main.ml"
+                    compilerFile.getPath()
             );
 
             // Define the folder to execute the command
-            pb.directory(compilerFolder);
+            pb.directory(binDir);
 
             // Redirect errors
-            pb.inheritIO();
+            pb.redirectErrorStream(true);
 
             Process process = pb.start();
 
             int exitCode = process.waitFor();
+
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream())
+            );
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println("[OCAML] " + line);
+            }
 
             if (exitCode != 0) {
                 System.err.println("Compilação OCaml falhou com código: " + exitCode);

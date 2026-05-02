@@ -38,28 +38,14 @@ echo -e "  - Diretório ./out criado e limpo."
 
 # 4. Java Source Code Compilation
 echo -e "${BLUE}[4/4] A compilar ficheiros fonte Java...${NC}"
-
-# Compile Java sources
 javac -d out src/*.java
 
-compile_status=$?
-
-# Check compilation result
-if [ $compile_status -eq 0 ]; then
+if [ $? -eq 0 ]; then
     echo -e "${GREEN}  - Compilação Java concluída com sucesso!${NC}"
+
     echo -e "\n${BLUE}===============================================${NC}"
-
-    # Run the Java application once
+    
     echo -e "${GREEN}A iniciar a aplicação...${NC}"
-    java -cp out Main
-    java_exit_code=$?
-fi
 
-# Check if OCaml binary exists
-if [ $compile_status -eq 10 ]; then
-    if [ -f "bin/main.exe" ]; then
-        echo -e "${GREEN}  - Executável OCaml detectado com sucesso!${NC}"
-    else
-        echo -e "${RED}  - Inconsistência: Java reportou sucesso, mas o binário não existe.${NC}"
-    fi
+    java -cp out Main
 fi
