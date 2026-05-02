@@ -12,9 +12,7 @@ out/
 .settings
 .springBeans
 .sts4-cache
-bin/*.exe
-bin/*.cmo
-bin/*.cmi
+bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 

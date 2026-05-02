@@ -67,7 +67,7 @@ public class IntegratorOCaml {
         return output;
     }
 
-    public boolean compileOCaml(String folder, String outputName) {
+    public boolean compileOCaml(File compilerFolder, String outputName) {
         try {
             ProcessBuilder pb = new ProcessBuilder(
                     "ocamlc",
@@ -77,7 +77,7 @@ public class IntegratorOCaml {
             );
 
             // Define the folder to execute the command
-            pb.directory(new File(folder));
+            pb.directory(compilerFolder);
 
             // Redirect errors
             pb.inheritIO();
